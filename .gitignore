@@ -16,6 +16,9 @@ web/node_modules/
 web/dist/
 web/.vite/
 
+# Wrangler local state (R2/Pages simulator, logs)
+web/.wrangler/
+
 # OS
 .DS_Store
 
