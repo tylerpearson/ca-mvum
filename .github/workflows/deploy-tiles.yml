@@ -17,13 +17,23 @@ on:
       - "web/public/tiles/routes.pmtiles"
   workflow_dispatch: {}
 
+# Least privilege: this job only reads the repo to grab the committed tile file;
+# the R2 write happens through CLOUDFLARE_API_TOKEN, not the GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   upload:
     runs-on: ubuntu-latest
+    # Only ever run against main — keeps the R2-write token off any other ref,
+    # including manual workflow_dispatch runs from a branch.
+    if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      # Actions pinned to commit SHAs (not mutable tags) so a retag can't swap
+      # the code that runs with our R2 credentials.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Upload routes.pmtiles to R2
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
