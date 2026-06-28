@@ -177,7 +177,16 @@ snowToggle.addEventListener("change", () => setSnowVisible(map, snowToggle.check
 vehicleSel.addEventListener("change", applyFilters);
 dateInput.addEventListener("change", applyFilters);
 hideClosed.addEventListener("change", applyFilters);
-map.on("moveend", () => { if (fireToggle.checked) refreshAffectedStatus(); });
+// Debounced so panning during an active-fire event doesn't re-run the turf
+// intersection over every rendered route on each settle.
+function debounce<A extends unknown[]>(fn: (...a: A) => void, ms: number) {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  return (...a: A) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+const onMoveAffected = debounce(() => {
+  if (fireToggle.checked) refreshAffectedStatus();
+}, 200);
+map.on("moveend", onMoveAffected);
 
 // --- Popups ---------------------------------------------------------------
 function popupHtml(p: Record<string, unknown>, inFire: boolean): string {

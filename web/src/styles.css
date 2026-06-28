@@ -270,6 +270,12 @@ select:focus-visible, input:focus-visible {
     border-radius: var(--radius) var(--radius) 0 0;
     border-bottom: none;
   }
+  /* Comfortable touch targets (≥44px) in the bottom sheet. */
+  select, input[type="date"], #search, #search-go, #forest-jump {
+    min-height: 44px;
+  }
+  .check { padding: 8px 0; }
+  .check input { width: 18px; height: 18px; }
 }
 
 /* --- Search & forest quick-jump ------------------------------------------ */
