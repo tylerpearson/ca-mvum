@@ -1,7 +1,7 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./styles.css";
-import { Protocol } from "pmtiles";
+import { Protocol, PMTiles, FileSource } from "pmtiles";
 
 import {
   ROUTES_PMTILES, VEHICLE_PROFILES, CLASS_LABELS, MAP_CENTER, MAP_ZOOM, CA_BBOX,
@@ -25,6 +25,18 @@ import { initWeather } from "./weather";
 const protocol = new Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
+// Static hosts like Cloudflare Pages don't serve HTTP range requests — they
+// return the whole file with a 200, which PMTiles' default range-based
+// FetchSource rejects ("storage backend ... HTTP Byte Serving"). The archive is
+// small (~16 MB), so we fetch it ONCE into memory and serve every tile by
+// slicing that buffer via a FileSource. No range requests, works on any static
+// host. The basemap renders immediately; routes appear once this resolves.
+// The key "routes.pmtiles" must match the source URL pmtiles://routes.pmtiles.
+const archiveReady: Promise<void> = (async () => {
+  const buf = await (await fetch(ROUTES_PMTILES)).arrayBuffer();
+  protocol.add(new PMTiles(new FileSource(new File([buf], "routes.pmtiles"))));
+})();
+
 // --- Basemap: USGS topo, desaturated --------------------------------------
 // The topo sheet is muted (saturation pulled down, contrast/brightness lifted)
 // so its own green forest boundaries, blue water and red highways fade to a
@@ -39,7 +51,8 @@ const style: maplibregl.StyleSpecification = {
       tiles: ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"],
       attribution: "USGS The National Map",
     },
-    routes: { type: "vector", url: `pmtiles://${ROUTES_PMTILES}` },
+    // The "routes" vector source is added in map.on("load") once the in-memory
+    // PMTiles archive (archiveReady) is registered with the protocol — see above.
   },
   layers: [
     {
@@ -238,7 +251,16 @@ function applyLayerParams(): void {
   if (layers.includes("snow")) { snowToggle.checked = true; setSnowVisible(map, true); }
 }
 
-map.on("load", () => {
+map.on("load", async () => {
+  // Wait for the in-memory PMTiles archive, then add the vector source the route
+  // layers depend on. The basemap is already visible at this point.
+  try {
+    await archiveReady;
+  } catch (e) {
+    console.error("Failed to load route tiles", e);
+    return;
+  }
+  map.addSource("routes", { type: "vector", url: "pmtiles://routes.pmtiles" });
   addRouteLayers(map);
   // Area-condition washes sit BELOW the route network (inserted before the
   // route casing) so the purple routes stay crisp on top of them. Fire is the

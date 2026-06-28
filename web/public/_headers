@@ -1,0 +1,6 @@
+# Cloudflare Pages headers. The route tiles are a single immutable-ish artifact
+# but get replaced wholesale on each data rebuild (no content hash in the name),
+# so cache for an hour rather than forever to avoid serving stale routes after a
+# refresh. Range requests (used by the pmtiles protocol) work on Pages by default.
+/tiles/*
+  Cache-Control: public, max-age=3600

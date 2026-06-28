@@ -34,7 +34,12 @@ def main() -> int:
         "--force",
         "--layer=routes",
         "--minimum-zoom=4",
-        "--maximum-zoom=14",
+        # maxzoom 13 (not 14) keeps the single .pmtiles under Cloudflare Pages'
+        # 25 MiB per-file limit (~16 MiB vs ~28). The maxzoom level holds the
+        # full-resolution geometry and dominates file size; at z13 MapLibre
+        # overzooms for z14+ and the route LINES stay crisp (verified), so the
+        # only cost is sub-meter geometry precision past z13 — invisible here.
+        "--maximum-zoom=13",
         # Keep EVERY route at every zoom (no dropping) so the statewide overview
         # actually shows the network. Allow oversized low-zoom tiles and simplify
         # hard when zoomed out to keep them manageable.

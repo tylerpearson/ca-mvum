@@ -1,0 +1,7 @@
+# Cloudflare Pages config for the static build.
+#   cd web && npm run build && npx wrangler pages deploy
+# (first deploy: `npx wrangler login`, then the command above creates the
+#  "ca-mvum" Pages project and uploads web/dist.)
+name = "ca-mvum"
+compatibility_date = "2026-06-28"
+pages_build_output_dir = "dist"
