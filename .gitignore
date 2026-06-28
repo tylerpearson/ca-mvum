@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.python-version-local
+
+# uv
+.uv/
+
+# Generated GeoJSON (large; rebuild with `make fetch`)
+/data/*.geojson
+/data/*.geojson.gz
+
+# Node / Vite
+web/node_modules/
+web/dist/
+web/.vite/
+
+# OS
+.DS_Store
+
+# Local verification screenshots
+.preview-*.png
+
+# Keep the built vector tiles tracked so the app builds without a network pull.
+# (web/public/tiles/routes.pmtiles is intentionally NOT ignored.)

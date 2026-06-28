@@ -1,0 +1,269 @@
+/* California MVUM — cartographic chrome around a hero map.
+   Color: OKLCH, Restrained product palette. The panel is the printed map's
+   margin: a solid legend block, not glass. Light theme only — the app is built
+   to be read in daylight, against a daylight (USGS topo) sheet. */
+
+:root {
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    ui-serif, serif;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  /* status colors mirror the map layers (style.ts) so the legend never lies */
+  --st-open: #6d1bb5;
+  --st-closed: #9aa0a8;
+  --st-fire: #e4572e;
+  --st-smoke: #766f67;
+  --st-snow: #7fb2d6;
+  /* AQI category ramp (mirrors AQI_CATEGORIES in aqi.ts): Good -> Hazardous */
+  --aqi-ramp: linear-gradient(90deg,
+    #5cb85c 0 16.6%, #e7d044 16.6% 33.3%, #f0913c 33.3% 50%,
+    #e14b3a 50% 66.6%, #9a4fa3 66.6% 83.3%, #7d2030 83.3% 100%);
+
+  --radius: 9px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --z-panel: 10;
+
+  /* light (default) */
+  --ink: oklch(0.24 0.02 250);
+  --muted: oklch(0.5 0.02 250);
+  --panel: oklch(0.99 0.004 250);
+  --surface: oklch(0.965 0.006 250);
+  --field: oklch(1 0 0);
+  --border: oklch(0.88 0.008 250);
+  --primary: oklch(0.52 0.13 250);
+  --primary-ink: oklch(0.99 0 0);
+  --shadow: 0 6px 24px -10px oklch(0.3 0.04 250 / 0.45),
+    0 1px 2px oklch(0.3 0.04 250 / 0.2);
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+#map { position: fixed; inset: 0; }
+
+/* --- Panel: the map's margin --------------------------------------------- */
+#panel {
+  position: absolute;
+  z-index: var(--z-panel);
+  top: 16px;
+  left: 16px;
+  width: 320px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 18px 20px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  /* a thin inner rule, like a neatline around a map sheet */
+  outline: 1px solid var(--panel);
+  outline-offset: -5px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#panel h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.45rem;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.sub {
+  margin: 6px 0 16px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 60ch;
+}
+
+/* --- Fields -------------------------------------------------------------- */
+.field { display: block; margin: 0 0 12px; }
+.field > span {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+select, input[type="date"] {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  transition: border-color 0.15s var(--ease);
+}
+select:hover, input[type="date"]:hover { border-color: var(--muted); }
+select:focus-visible, input:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.25);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.check input { accent-color: var(--primary); width: 15px; height: 15px; flex: none; }
+
+/* --- Overlays group ------------------------------------------------------ */
+.overlays {
+  margin: 16px 0 14px;
+  padding: 12px 14px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.overlays legend {
+  padding: 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.status {
+  margin: 8px 2px 2px;
+  min-height: 1em;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* --- Legend & swatches --------------------------------------------------- */
+.legend {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 16px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.legend > div { display: flex; align-items: center; gap: 9px; }
+
+.sw {
+  flex: none;
+  width: 16px;
+  height: 3px;
+}
+/* line-style swatches: drawn as fills so they mirror the map's route lines */
+.sw.open { background: var(--st-open); }
+.sw.affected { background: var(--st-fire); }
+.sw.closed {
+  background: repeating-linear-gradient(
+    90deg, var(--st-closed) 0 4px, transparent 4px 7px
+  );
+}
+/* area-style swatches: small filled chips for the overlay washes */
+.sw.fire { height: 12px; border-radius: 2px; background: oklch(from var(--st-fire) l c h / 0.22); }
+.sw.smoke { height: 12px; border-radius: 2px; background: var(--st-smoke); opacity: 0.55; }
+.sw.snow { height: 12px; border-radius: 2px; background: var(--st-snow); opacity: 0.7; }
+/* AQI is a category colorbar, so its chip mirrors the scale (a real legend
+   ramp, not decorative): Good -> Hazardous, left to right. */
+.sw.aqi { height: 12px; border-radius: 2px; background: var(--aqi-ramp); }
+
+/* AQI scale under the overlay toggles: a labelled colorbar */
+.aqi-scale {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 2px;
+  padding-left: 26px; /* align bar under the toggle labels */
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.aqi-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 3px;
+  background: var(--aqi-ramp);
+}
+
+/* --- Disclaimer ---------------------------------------------------------- */
+.disclaimer {
+  margin: 4px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.disclaimer em { color: var(--ink); font-style: normal; font-weight: 600; }
+
+/* --- Popups -------------------------------------------------------------- */
+.pop h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.pop dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  margin: 0;
+  font-size: 0.8rem;
+}
+.pop dt { color: var(--muted); }
+.pop dd { margin: 0; color: var(--ink); }
+.pop-warn {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--st-fire);
+}
+.maplibregl-popup-content {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+}
+.maplibregl-popup-tip { border-top-color: var(--panel) !important; border-bottom-color: var(--panel) !important; }
+.maplibregl-popup-close-button { color: var(--muted); font-size: 1.1rem; padding: 2px 7px; }
+
+/* --- Responsive: bottom sheet on phones ---------------------------------- */
+@media (max-width: 560px) {
+  #panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 56dvh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    border-bottom: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

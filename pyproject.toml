@@ -1,0 +1,13 @@
+[project]
+name = "ca-mvum"
+version = "0.1.0"
+description = "California statewide MVUM (Motor Vehicle Use Map) web map with live fire/smoke/snow overlays"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28",
+    "shapely>=2.0",
+]
+
+[tool.ca-mvum]
+# Build pipeline is run via the Makefile; see `make help`.
