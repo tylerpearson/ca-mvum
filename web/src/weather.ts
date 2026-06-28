@@ -200,7 +200,29 @@ function cardHTML(lat: number, lng: number, info?: WeatherInfo): string {
 
 // --- Wiring --------------------------------------------------------------
 export function initWeather(map: MLMap): void {
+  // "Weather mode" is an explicit, armed gesture rather than a bare map click:
+  // a plain click anywhere used to open a forecast popup, which read as an
+  // accidental side effect of panning. The toggle arms the next-tap behavior,
+  // sets a crosshair cursor as the affordance, and Esc / re-tapping disarms.
+  const toggle = document.getElementById("weather-toggle") as HTMLButtonElement | null;
+  const hint = document.getElementById("weather-hint");
+  let armed = false;
+
+  const setArmed = (on: boolean): void => {
+    armed = on;
+    toggle?.setAttribute("aria-pressed", String(on));
+    map.getCanvas().style.cursor = on ? "crosshair" : "";
+    if (hint) hint.textContent = on ? "Tap a spot on the map · Esc to exit" : "";
+  };
+
+  toggle?.addEventListener("click", () => setArmed(!armed));
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && armed) setArmed(false);
+  });
+
   map.on("click", (e: MapMouseEvent) => {
+    if (!armed) return; // weather mode is off — let the map click do nothing
+
     // Defer to the route-click popups (main.ts): if a route line was tapped,
     // let its own layer handler answer instead of opening a weather popup.
     const hit = map.queryRenderedFeatures(e.point, {
@@ -212,6 +234,10 @@ export function initWeather(map: MLMap): void {
       ],
     });
     if (hit.length) return;
+
+    // One forecast per arm: disarm after a spot is chosen so the map returns to
+    // normal panning. Re-tap the toggle to check another spot.
+    setArmed(false);
 
     const { lat, lng } = e.lngLat;
     const popup = new maplibregl.Popup({ closeButton: true, maxWidth: "260px" })
