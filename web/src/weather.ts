@@ -85,7 +85,7 @@ const SUN_ANGLE = -0.833 * RAD; // refraction + solar disc at the horizon
 const J0 = 0.0009; // fractional-day correction
 
 const toDays = (date: Date): number => date.valueOf() / DAY_MS - 0.5 + J1970 - J2000;
-const fromJulian = (j: number): Date => new Date((j + 0.5 - J1970 + J2000) * DAY_MS);
+const fromJulian = (j: number): Date => new Date((j + 0.5 - J1970) * DAY_MS);
 const solarMeanAnomaly = (d: number): number => RAD * (357.5291 + 0.98560028 * d);
 
 const eclipticLongitude = (M: number): number => {
