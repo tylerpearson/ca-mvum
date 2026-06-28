@@ -37,6 +37,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Pin wrangler 4.x: the action defaults to 3.90.0, where R2 uploads
+          # hit the remote bucket by default and `--remote` is not a valid flag.
+          # In 4.x local is the default, so `--remote` (below) is required.
+          wranglerVersion: "4.105.0"
           command: >-
             r2 object put ca-mvum-tiles/routes.pmtiles
             --file web/public/tiles/routes.pmtiles
