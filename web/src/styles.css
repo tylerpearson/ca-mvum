@@ -318,6 +318,18 @@ select:focus-visible, input:focus-visible {
   margin-top: 8px;
 }
 
+/* --- Data vintage: a quiet metadata line above the disclaimer ------------ */
+/* The MVUM tiles are a point-in-time pull (unlike the live overlays), so this
+   states how fresh the route data is. Muted but readable — uses --muted on
+   --panel (>4.5:1), with the date itself in --ink for a touch of emphasis. */
+.data-vintage {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.data-vintage strong { color: var(--ink); font-weight: 600; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }

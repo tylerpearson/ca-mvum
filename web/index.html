@@ -3,9 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#6d1bb5" />
     <title>California MVUM — motor vehicle routes, live fire / smoke / snow</title>
     <meta
       name="description"
+      content="Statewide California National Forest Motor Vehicle Use Map (MVUM): roads and trails open to motor vehicles by class and season, with live wildfire, smoke, and snow overlays."
+    />
+
+    <!-- Open Graph / social. Update og:url to the real deploy URL on launch.
+         og:image intentionally omitted for now — add a hosted share image (follow-up). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://example.com/" />
+    <meta
+      property="og:title"
+      content="California MVUM — motor vehicle routes, live fire / smoke / snow"
+    />
+    <meta
+      property="og:description"
+      content="Statewide California National Forest Motor Vehicle Use Map (MVUM): roads and trails open to motor vehicles by class and season, with live wildfire, smoke, and snow overlays."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="California MVUM — motor vehicle routes, live fire / smoke / snow"
+    />
+    <meta
+      name="twitter:description"
       content="Statewide California National Forest Motor Vehicle Use Map (MVUM): roads and trails open to motor vehicles by class and season, with live wildfire, smoke, and snow overlays."
     />
   </head>
@@ -62,6 +86,9 @@
         <div><span class="sw closed"></span> Closed (out of season / not allowed)</div>
         <div><span class="sw affected"></span> Within an active fire perimeter</div>
       </div>
+
+      <!-- "June 2026" mirrors DATA_VINTAGE in src/config.ts; keep them in sync. -->
+      <p id="data-vintage" class="data-vintage">MVUM route data current as of <strong>June 2026</strong>.</p>
 
       <p class="disclaimer">
         ⚠ Verify before you go. MVUM shows legal <em>designation</em>, not temporary
