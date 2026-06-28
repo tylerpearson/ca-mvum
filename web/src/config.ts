@@ -50,8 +50,14 @@ export const CLASS_LABELS: Record<string, string> = {
   e_bike3: "E-bike (Class 3)",
 };
 
-/** Vector tiles built by pipeline/build_tiles.py. */
-export const ROUTES_PMTILES = "/tiles/routes.pmtiles";
+/** Vector tiles built by pipeline/build_tiles.py.
+ *  Read over HTTP range requests (the PMTiles default). In dev we serve the
+ *  committed file from web/public/tiles (Vite supports ranges); in production we
+ *  point at R2, which serves real 206 range responses + CORS. Set VITE_TILES_URL
+ *  in the Cloudflare Pages build env to the R2 archive URL
+ *  (e.g. https://tiles.ca-mvum.typearson.dev/routes.pmtiles). See
+ *  docs/r2-range-requests-plan.md. */
+export const ROUTES_PMTILES = import.meta.env.VITE_TILES_URL ?? "/tiles/routes.pmtiles";
 export const ROUTES_SOURCE_LAYER = "routes";
 
 /** MVUM tile build date — the point-in-time vintage of the route data baked

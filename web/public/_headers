@@ -1,6 +1,14 @@
-# Cloudflare Pages headers. The route tiles are a single immutable-ish artifact
-# but get replaced wholesale on each data rebuild (no content hash in the name),
-# so cache for an hour rather than forever to avoid serving stale routes after a
-# refresh. Range requests (used by the pmtiles protocol) work on Pages by default.
+# Cloudflare Pages headers.
+#
+# In production the route tiles are served from R2 (which does support real 206
+# range requests + CORS), not from Pages — so this /tiles/* rule normally won't
+# be hit. It stays as a fallback for any deploy that ships tiles via Pages
+# (e.g. VITE_TILES_URL unset). NOTE: Pages itself does NOT serve range requests
+# — it returns the whole file with a 200 — which is exactly why tiles live on R2.
+# See docs/r2-range-requests-plan.md.
+#
+# The tiles file is replaced wholesale on each data rebuild (no content hash in
+# the name), so cache for an hour rather than forever to avoid serving stale
+# routes after a refresh.
 /tiles/*
   Cache-Control: public, max-age=3600
