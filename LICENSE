@@ -19,11 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Note: this license covers the source code of this project. The underlying data
-is provided by third parties under their own terms — USFS MVUM and NOAA NOHRSC
-(U.S. government works), NIFC/WFIGS wildfire data, NOAA HMS smoke, EPA AirNow
-air quality, OpenStreetMap/Nominatim place search, and USGS basemap tiles.
-This project is a planning aid, not a legal authority.
