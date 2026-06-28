@@ -179,6 +179,15 @@ select:focus-visible, input:focus-visible {
     90deg, var(--st-closed) 0 4px, transparent 4px 7px
   );
 }
+/* kind axis (independent of status): road = bold solid, trail = finer + dashed.
+   Drawn in neutral ink so they read as line TEXTURE, not a status color. */
+.sw.road { background: var(--ink); }
+.sw.trail {
+  height: 2px; /* thinner, to mirror the lighter trail line on the map */
+  background: repeating-linear-gradient(
+    90deg, var(--ink) 0 3px, transparent 3px 6px
+  );
+}
 /* area-style swatches: small filled chips for the overlay washes */
 .sw.fire { height: 12px; border-radius: 2px; background: oklch(from var(--st-fire) l c h / 0.22); }
 .sw.smoke { height: 12px; border-radius: 2px; background: var(--st-smoke); opacity: 0.55; }
