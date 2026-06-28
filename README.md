@@ -9,6 +9,8 @@ reachable right now.
 It turns the Forest Service's static, forest-by-forest MVUM PDFs into one live,
 filterable map across all 17 California national forests.
 
+![California MVUM — the open route network around Big Bear in San Bernardino National Forest, on the desaturated USGS topo basemap](docs/screenshot.png)
+
 > ⚠️ **Verify before you go.** MVUM shows legal *designation*, not temporary
 > Forest closure orders. The fire/smoke/AQI/snow layers are situational
 > awareness, not official closures. Always confirm current conditions with the
@@ -122,3 +124,8 @@ MVUM and NOHRSC data are U.S. government works. Fire data © NIFC/WFIGS; smoke �
 NOAA HMS; air quality © EPA AirNow; place search © OpenStreetMap/Nominatim
 contributors. Basemap © USGS The National Map. This is a planning aid, not a
 legal authority.
+
+## License
+
+Source code under the [MIT License](LICENSE). Third-party data is subject to its
+providers' own terms (see above).
