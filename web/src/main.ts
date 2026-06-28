@@ -5,6 +5,7 @@ import { Protocol } from "pmtiles";
 
 import {
   ROUTES_PMTILES, VEHICLE_PROFILES, CLASS_LABELS, MAP_CENTER, MAP_ZOOM, CA_BBOX,
+  mvumUrlForForest,
 } from "./config";
 import {
   addRouteLayers, updateRouteFilters, ROUTE_LAYERS,
@@ -17,6 +18,8 @@ import { initSmoke, refreshSmoke, setSmokeVisible } from "./smoke";
 import { initAqi, refreshAqi, setAqiVisible, AQI_CATEGORIES } from "./aqi";
 import { initSnow, setSnowVisible } from "./snow";
 import { initSearch } from "./search";
+import { initExport } from "./export";
+import { initWeather } from "./weather";
 
 // --- PMTiles protocol ------------------------------------------------------
 const protocol = new Protocol();
@@ -203,7 +206,13 @@ function popupHtml(p: Record<string, unknown>, inFire: boolean): string {
   ];
   const body = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
   const warn = inFire ? `<p class="pop-warn">⚠ Within an active fire perimeter</p>` : "";
-  return `<div class="pop"><h3>${title}</h3>${warn}<dl>${body}</dl></div>`;
+  // Link to the forest's official MVUM — the authoritative source this route was
+  // derived from, and where to confirm the legal designation before a trip.
+  const mvum = mvumUrlForForest(p.forest as string | undefined);
+  const link =
+    `<p class="pop-link"><a href="${mvum}" target="_blank" rel="noopener noreferrer">` +
+    `Official MVUM ↗</a></p>`;
+  return `<div class="pop"><h3>${title}</h3>${warn}<dl>${body}</dl>${link}</div>`;
 }
 
 for (const layer of [ROUTE_LAYERS.open, ROUTE_LAYERS.closed, ROUTE_LAYERS.affected]) {
@@ -241,4 +250,8 @@ map.on("load", () => {
   applyFilters();
   applyLayerParams();
   initSearch(map);
+  initExport(map);
+  // Tap anywhere off a route for a point forecast + sun times. Registered after
+  // the route-click handlers above; it bails when a route was tapped so those win.
+  initWeather(map);
 });

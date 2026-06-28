@@ -90,6 +90,15 @@
         <div><span class="sw affected"></span> Within an active fire perimeter</div>
       </div>
 
+      <div class="field export-field">
+        <span>Export visible routes</span>
+        <div class="export-row">
+          <button id="export-gpx" type="button">GPX</button>
+          <button id="export-kml" type="button">KML</button>
+        </div>
+        <p id="export-status" class="export-status" role="status" aria-live="polite"></p>
+      </div>
+
       <!-- "June 2026" mirrors DATA_VINTAGE in src/config.ts; keep them in sync. -->
       <p id="data-vintage" class="data-vintage">MVUM route data current as of <strong>June 2026</strong>.</p>
 

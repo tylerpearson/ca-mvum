@@ -271,7 +271,8 @@ select:focus-visible, input:focus-visible {
     border-bottom: none;
   }
   /* Comfortable touch targets (≥44px) in the bottom sheet. */
-  select, input[type="date"], #search, #search-go, #forest-jump {
+  select, input[type="date"], #search, #search-go, #forest-jump,
+  #export-gpx, #export-kml {
     min-height: 44px;
   }
   .check { padding: 8px 0; }
@@ -347,3 +348,84 @@ select:focus-visible, input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* --- Export control ------------------------------------------------------ */
+/* Two side-by-side primary buttons that turn the currently-visible open routes
+   into a GPX/KML download. Mirrors #search-go (primary fill, hover darken,
+   focus ring) and #search-status (quiet status line with reserved height). */
+.export-row {
+  display: flex;
+  gap: 7px;
+}
+#export-gpx, #export-kml {
+  flex: 1;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-ink);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease);
+}
+#export-gpx:hover, #export-kml:hover {
+  background: oklch(from var(--primary) calc(l - 0.05) c h);
+}
+#export-gpx:focus-visible, #export-kml:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.25);
+}
+#export-status {
+  margin: 6px 2px 0;
+  min-height: 1em;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* --- Weather popup -------------------------------------------------------- */
+/* Tap-for-weather card (weather.ts). The base .maplibregl-popup-content is
+   already themed above; this only styles the .wx inner content so it reads as a
+   sibling of the route .pop card — display serif heading, compact ink body. */
+.wx h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wx p {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.wx p:last-child { margin-bottom: 0; }
+/* Locally-computed sun row: quieter, with a hairline rule separating it from
+   the forecast line above. */
+.wx-sun {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* --- Route popup: official MVUM link ------------------------------------- */
+/* A quiet footer link in the route popup to the forest's official MVUM (the
+   authoritative source). Hairline rule above to set it off from the data list. */
+.pop-link {
+  margin: 10px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+.pop-link a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.pop-link a:hover { text-decoration: underline; }

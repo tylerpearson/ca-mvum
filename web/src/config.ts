@@ -94,3 +94,27 @@ export const AQI_FEATURES_URL =
 export const SNOW_WMS_URL =
   "https://mapservices.weather.noaa.gov/raster/services/snow/NOHRSC_Snow_Analysis/MapServer/WMSServer";
 export const SNOW_WMS_LAYERS = "0"; // Snow Depth
+
+// --- Official MVUM map links ----------------------------------------------
+
+/** Forest Service Pacific Southwest Region (R5) MVUM & OSVUM Finder — the
+ *  official interactive tool that links to the downloadable geospatial-PDF MVUM
+ *  for every California (R5) national forest. Per-forest MVUM page paths on
+ *  fs.usda.gov are inconsistent (Tahoe lives under /maps-guides/, others under
+ *  /data-tools/) and get re-pathed when maps are reissued, so we link to this
+ *  one canonical finder rather than 16 fragile deep links. Verified June 2026. */
+export const R5_MVUM_FINDER_URL =
+  "https://www.fs.usda.gov/r05/data-tools/interactive-maps/mvum-finder";
+
+/** Humboldt-Toiyabe straddles the Nevada line and is administered by Region 4,
+ *  not R5, so it isn't in the R5 finder — link to its own MVUM page. */
+export const HUMBOLDT_TOIYABE_MVUM_URL =
+  "https://www.fs.usda.gov/r04/humboldt-toiyabe/data-tools/interactive-maps/motor-vehicle-use-maps-mvum";
+
+/** Official MVUM download page for a route's forest (matched on the `forest`
+ *  property, e.g. "Tahoe National Forest"). Humboldt-Toiyabe (R4) has its own
+ *  page; every other CA forest resolves through the R5 MVUM Finder. */
+export function mvumUrlForForest(forest: string | null | undefined): string {
+  if (forest && forest.startsWith("Humboldt-Toiyabe")) return HUMBOLDT_TOIYABE_MVUM_URL;
+  return R5_MVUM_FINDER_URL;
+}

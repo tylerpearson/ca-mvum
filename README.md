@@ -33,6 +33,12 @@ filterable map across all 17 California national forests.
   quick-jump.
 - **Live conditions** — fire perimeters (with the count of *your* routes inside
   one), smoke aloft, ground-level air quality, and snow depth.
+- **Export what you see** — download the currently-visible open routes as a
+  **GPX or KML** file to load into Gaia, onX, or a Garmin before you lose signal.
+- **Tap for weather** — tap anywhere off a route for the NWS point forecast plus
+  on-device sunrise/sunset and daylight-remaining (computed locally, no key).
+- **Straight to the source** — every route popup links to its forest's official
+  Forest Service MVUM.
 
 ## How it works
 
@@ -55,6 +61,7 @@ Two halves:
 | Smoke aloft | NOAA HMS satellite smoke detection | live, per visit |
 | Air quality (ground) | EPA AirNow combined-AQI contours | live, per visit |
 | Snow depth | NOAA NOHRSC (SNODAS) snow analysis WMS | live, per visit |
+| Weather forecast | NWS (api.weather.gov) point forecast | live, per tap |
 | Basemap | USGS Topo (desaturated) | tiles |
 
 **Smoke vs. air quality** are intentionally separate: HMS smoke is a plume
@@ -114,14 +121,16 @@ web/
   src/aqi.ts        # AirNow ground-level AQI contours
   src/snow.ts       # NOHRSC snow-depth WMS raster
   src/search.ts     # place geocoder + forest quick-jump
+  src/export.ts     # GPX/KML export of the visible open routes
+  src/weather.ts    # tap-for-weather (NWS) + on-device sun times
   src/main.ts       # map, controls, popups
 PRODUCT.md / DESIGN.md   # impeccable design context
 ```
 
 ## Disclaimers & credits
 
-MVUM and NOHRSC data are U.S. government works. Fire data © NIFC/WFIGS; smoke ©
-NOAA HMS; air quality © EPA AirNow; place search © OpenStreetMap/Nominatim
+MVUM, NOHRSC, and NWS data are U.S. government works. Fire data © NIFC/WFIGS;
+smoke © NOAA HMS; air quality © EPA AirNow; place search © OpenStreetMap/Nominatim
 contributors. Basemap © USGS The National Map. This is a planning aid, not a
 legal authority.
 
