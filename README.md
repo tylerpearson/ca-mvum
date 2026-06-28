@@ -49,8 +49,9 @@ Two halves:
    compact schema, clips to California, and bakes everything into a single
    PMTiles vector-tile file.
 2. **Static web app** (`web/`) — a MapLibre GL single-page app that serves those
-   tiles and fetches the live overlays client-side. No server runtime; deploys
-   to any static host.
+   tiles and fetches the live overlays client-side. No server runtime: the app
+   deploys as static files anywhere, with the route tiles served from object
+   storage (R2) that supports HTTP range requests. See [Deploy](#deploy).
 
 ### Data sources
 
@@ -189,3 +190,8 @@ legal authority.
 
 Source code under the [MIT License](LICENSE). Third-party data is subject to its
 providers' own terms (see above).
+
+---
+
+*A personal project, shared as-is — built for my own use, with no warranty or
+support.*
