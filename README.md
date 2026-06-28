@@ -104,6 +104,37 @@ make build         # static build -> web/dist
 The app reads `web/public/tiles/routes.pmtiles` (committed), so it runs without
 rebuilding the data.
 
+## Deploy
+
+Live at **https://ca-mvum.typearson.dev**, hosted on **Cloudflare Pages**.
+
+It's a pure static build, so any static host works. The repo is wired for
+Cloudflare Pages **Git auto-deploy** — every push to `main` builds and ships:
+
+| Pages build setting | Value |
+|---------------------|-------|
+| Root directory | `web` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+
+Manual deploy (bypassing Git), from `web/`:
+
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name ca-mvum --branch main
+```
+
+**Tile loading — why it's not range requests.** PMTiles is normally read with
+HTTP range requests, but Cloudflare Pages (and many static hosts) don't serve
+them — they return the whole file with a `200`, which the PMTiles client
+rejects. So the app fetches the whole `routes.pmtiles` **once into memory** (a
+`FileSource`) and serves tiles from that buffer (`web/src/main.ts`). That keeps
+it host-agnostic at the cost of a single ~16 MB load up front. It also caps the
+tile build at **maxzoom 13** (`pipeline/build_tiles.py`) to stay under Pages'
+**25 MiB per-file** limit; MapLibre overzooms for z14+ so route lines stay crisp.
+
+`web/wrangler.toml` and `web/public/_headers` hold the Pages config.
+
 ## Project layout
 
 ```
