@@ -1,0 +1,34 @@
+name: Deploy tiles to R2
+
+# The web app deploys via Cloudflare Pages' own Git integration. The route tiles
+# don't — they live in an R2 bucket (served over HTTP range requests), so they
+# need their own upload step. This runs ONLY when the committed tile file
+# changes (a data refresh), not on every code push, so ordinary commits don't
+# re-upload the ~16 MB archive. See docs/r2-range-requests-plan.md.
+#
+# Requires two repo secrets:
+#   CLOUDFLARE_API_TOKEN   — token scoped to "Workers R2 Storage: Edit"
+#   CLOUDFLARE_ACCOUNT_ID  — the account id
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/public/tiles/routes.pmtiles"
+  workflow_dispatch: {}
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload routes.pmtiles to R2
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            r2 object put ca-mvum-tiles/routes.pmtiles
+            --file web/public/tiles/routes.pmtiles
+            --content-type application/octet-stream
+            --remote
