@@ -1,9 +1,20 @@
 # Plan: Move route tiles to Cloudflare R2 with HTTP range requests
 
-**Status:** deferred. Not needed today — the in-memory load works in production.
-**Do this when:** the `.pmtiles` archive grows past ~40–60 MB (more layers /
-higher-res / full-state detail) so the up-front fetch gets annoying, **or** you
-want to rebuild at maxzoom 14 (full-resolution geometry) and bust the 25 MiB cap.
+**Status: DONE (2026-06-28).** Tiles are live in the `ca-mvum-tiles` R2 bucket at
+`https://tiles.ca-mvum.typearson.dev`, served over `206` range requests with CORS;
+the app reads them in production via `import.meta.env.PROD` in `web/src/config.ts`,
+and `.github/workflows/deploy-tiles.yml` auto-uploads on tile changes. This doc is
+kept as the record of how it was set up and how to roll back.
+
+**One deviation from the steps below:** Cloudflare Pages would not inject the
+`VITE_TILES_URL` build env var into the Vite build, so production detection uses
+`import.meta.env.PROD` (set automatically by `vite build`) with the R2 URL baked
+into `config.ts` instead. `VITE_TILES_URL` still works as an override if set.
+
+The maxzoom-14 step (5) was intentionally **not** done — at maxzoom 13 the geometry
+is already ~1 m precise and MapLibre overzooms it crisply, so full-res would nearly
+double the file for no visible gain. Pull that lever only if a route ever looks
+wrong at extreme zoom.
 
 ## Why
 

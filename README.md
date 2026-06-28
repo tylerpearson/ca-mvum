@@ -124,15 +124,35 @@ npm run build
 npx wrangler pages deploy dist --project-name ca-mvum --branch main
 ```
 
-**Tile loading — why it's not range requests.** PMTiles is normally read with
-HTTP range requests, but Cloudflare Pages (and many static hosts) don't serve
-them — they return the whole file with a `200`, which the PMTiles client
-rejects. So the app fetches the whole `routes.pmtiles` **once into memory** (a
-`FileSource`) and serves tiles from that buffer (`web/src/main.ts`). That keeps
-it host-agnostic at the cost of a single ~16 MB load up front. It also caps the
-tile build at **maxzoom 13** (`pipeline/build_tiles.py`) to stay under Pages'
-**25 MiB per-file** limit; MapLibre overzooms for z14+ so route lines stay crisp.
+### Tiles: R2 + range requests
 
+The app (HTML/CSS/JS) ships via Pages, but the route tiles live in a **Cloudflare
+R2 bucket** (`ca-mvum-tiles`) served at **https://tiles.ca-mvum.typearson.dev**.
+PMTiles reads them with **HTTP range requests** — only the bytes for the tiles in
+view are fetched, so the map paints fast and a visitor who never leaves one area
+never downloads the whole ~16 MB archive. R2 is the right host for this because it
+serves real `206` range responses and CORS (Cloudflare Pages does not — it returns
+the whole file with a `200`, which the PMTiles client rejects).
+
+`web/src/config.ts` points production at R2 when `import.meta.env.PROD` is set (a
+plain `vite build`), and falls back to the local committed file in dev. The tile
+upload is automated separately from the app deploy:
+
+| What | How | Trigger |
+|------|-----|---------|
+| App (HTML/JS/tiles fallback) | Cloudflare Pages Git build | every push to `main` |
+| Route tiles → R2 | `.github/workflows/deploy-tiles.yml` (`wrangler r2 object put`) | push to `main` that changes `web/public/tiles/routes.pmtiles` |
+
+The tile workflow needs two repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to
+*Workers R2 Storage: Edit*) and `CLOUDFLARE_ACCOUNT_ID`. Manual upload, from `web/`:
+
+```bash
+npx wrangler r2 object put ca-mvum-tiles/routes.pmtiles \
+  --file public/tiles/routes.pmtiles --content-type application/octet-stream --remote
+```
+
+The R2 setup (bucket, custom domain, CORS) and the rationale/rollback are in
+[docs/r2-range-requests-plan.md](docs/r2-range-requests-plan.md).
 `web/wrangler.toml` and `web/public/_headers` hold the Pages config.
 
 ## Project layout
