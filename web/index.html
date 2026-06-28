@@ -18,6 +18,16 @@
       </header>
       <p class="sub">Forest roads &amp; trails open to motor vehicles — by class &amp; season.</p>
 
+      <div class="field search-field">
+        <span>Find a place</span>
+        <div class="search-row">
+          <input id="search" type="text" placeholder="e.g. Big Bear, Mount Shasta" autocomplete="off" />
+          <button id="search-go" type="button">Search</button>
+        </div>
+        <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
+        <select id="forest-jump" aria-label="Jump to a national forest"></select>
+      </div>
+
       <label class="field">
         <span>Vehicle</span>
         <select id="vehicle"></select>

@@ -16,6 +16,7 @@ import {
 import { initSmoke, refreshSmoke, setSmokeVisible } from "./smoke";
 import { initAqi, refreshAqi, setAqiVisible } from "./aqi";
 import { initSnow, setSnowVisible } from "./snow";
+import { initSearch } from "./search";
 
 // --- PMTiles protocol ------------------------------------------------------
 const protocol = new Protocol();
@@ -207,4 +208,5 @@ map.on("load", () => {
   initFire(map);
   applyFilters();
   applyLayerParams();
+  initSearch(map);
 });
