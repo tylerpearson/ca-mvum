@@ -14,7 +14,7 @@ import {
   initFire, refreshFirePerimeters, recomputeAffected, setFireVisible,
 } from "./fire";
 import { initSmoke, refreshSmoke, setSmokeVisible } from "./smoke";
-import { initAqi, refreshAqi, setAqiVisible } from "./aqi";
+import { initAqi, refreshAqi, setAqiVisible, AQI_CATEGORIES } from "./aqi";
 import { initSnow, setSnowVisible } from "./snow";
 import { initSearch } from "./search";
 
@@ -79,6 +79,8 @@ const smokeToggle = $("layer-smoke") as HTMLInputElement;
 const aqiToggle = $("layer-aqi") as HTMLInputElement;
 const snowToggle = $("layer-snow") as HTMLInputElement;
 const fireStatus = $("fire-status") as HTMLParagraphElement;
+const smokeStatus = $("smoke-status") as HTMLParagraphElement;
+const aqiStatus = $("aqi-status") as HTMLParagraphElement;
 
 // Grouped selector: Street-legal (plated) vs Off-road only (green/red sticker).
 const groups = new Map<string, HTMLOptGroupElement>();
@@ -139,12 +141,33 @@ async function toggleFire(on: boolean): Promise<void> {
 
 async function toggleSmoke(on: boolean): Promise<void> {
   setSmokeVisible(map, on);
-  if (on) { try { await refreshSmoke(map); } catch (e) { console.error(e); } }
+  if (!on) { smokeStatus.textContent = ""; return; }
+  smokeStatus.textContent = "Checking smoke…";
+  try {
+    const n = await refreshSmoke(map);
+    smokeStatus.textContent = n === 0
+      ? "No smoke plumes over California right now"
+      : `⚠ ${n} smoke plume${n === 1 ? "" : "s"} over California (smoke aloft)`;
+  } catch (e) {
+    smokeStatus.textContent = "Couldn't load smoke — try again later";
+    console.error(e);
+  }
 }
 
 async function toggleAqi(on: boolean): Promise<void> {
   setAqiVisible(map, on);
-  if (on) { try { await refreshAqi(map); } catch (e) { console.error(e); } }
+  if (!on) { aqiStatus.textContent = ""; return; }
+  aqiStatus.textContent = "Checking air quality…";
+  try {
+    const worst = await refreshAqi(map);
+    const cat = AQI_CATEGORIES.find((c) => c.code === worst);
+    aqiStatus.textContent = worst <= 1
+      ? "Air quality: Good across California right now"
+      : `Air quality reaches “${cat?.label ?? "elevated"}” somewhere in California today`;
+  } catch (e) {
+    aqiStatus.textContent = "Couldn't load air quality — try again later";
+    console.error(e);
+  }
 }
 
 fireToggle.addEventListener("change", () => void toggleFire(fireToggle.checked));

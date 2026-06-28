@@ -179,13 +179,12 @@ select:focus-visible, input:focus-visible {
     90deg, var(--st-closed) 0 4px, transparent 4px 7px
   );
 }
-/* kind axis (independent of status): road = bold solid, trail = finer + dashed.
-   Drawn in neutral ink so they read as line TEXTURE, not a status color. */
-.sw.road { background: var(--ink); }
+/* Open trail: same purple status hue as an open road, but thinner and dashed
+   (mirrors the map), so the swatch reads as the trail line itself. */
 .sw.trail {
-  height: 2px; /* thinner, to mirror the lighter trail line on the map */
+  height: 2px;
   background: repeating-linear-gradient(
-    90deg, var(--ink) 0 3px, transparent 3px 6px
+    90deg, var(--st-open) 0 4px, transparent 4px 7px
   );
 }
 /* area-style swatches: small filled chips for the overlay washes */

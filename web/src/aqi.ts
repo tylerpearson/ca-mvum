@@ -59,7 +59,8 @@ export function initAqi(map: MLMap, beforeId?: string): void {
   );
 }
 
-/** Fetch the latest AQI contour surface over California. Returns polygon count. */
+/** Fetch the latest AQI contour surface over California. Returns the WORST
+ *  category present (max gridcode, 0 if none) so callers can summarize today. */
 export async function refreshAqi(map: MLMap): Promise<number> {
   const params = new URLSearchParams({
     where: "1=1",
@@ -78,7 +79,10 @@ export async function refreshAqi(map: MLMap): Promise<number> {
   if (!resp.ok) throw new Error(`aqi ${resp.status}`);
   const fc = (await resp.json()) as GeoJSON.FeatureCollection;
   (map.getSource("aqi") as GeoJSONSource).setData(fc);
-  return fc.features?.length ?? 0;
+  return (fc.features ?? []).reduce(
+    (worst, f) => Math.max(worst, Number(f.properties?.gridcode) || 0),
+    0,
+  );
 }
 
 export function setAqiVisible(map: MLMap, on: boolean): void {

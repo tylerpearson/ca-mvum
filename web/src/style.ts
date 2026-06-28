@@ -40,17 +40,8 @@ const IS_TRAIL: ExpressionSpecification = [
   "==", ["get", "kind"], "trail",
 ] as ExpressionSpecification;
 
-/** Road line width ramp — tuned heavy for the light topo: roads must be the
- *  boldest lines on the sheet, not compete with contour hairlines. */
-const ROAD_WIDTH: ExpressionSpecification = [
-  "interpolate", ["linear"], ["zoom"],
-  4, 1.4,
-  7, 2.4,
-  10, 3.4,
-  14, 5.0,
-] as ExpressionSpecification;
-
-/** Trail line width ramp — ~30% thinner so trails read as secondary/rougher. */
+/** Trail line width ramp — ~30% thinner than a road, used directly by the
+ *  dashed trail-overlay layer (a standalone top-level interpolate is fine). */
 const TRAIL_WIDTH: ExpressionSpecification = [
   "interpolate", ["linear"], ["zoom"],
   4, 1.0,
@@ -59,31 +50,27 @@ const TRAIL_WIDTH: ExpressionSpecification = [
   14, 3.5,
 ] as ExpressionSpecification;
 
-/** route line width: thin for trails, full for roads. */
+/** Route line width: roads bold, trails ~30% thinner.
+ *  CRITICAL: a `["zoom"]` interpolate may ONLY be a TOP-LEVEL expression — it
+ *  cannot be nested inside a `case`. So zoom is the outer interpolate and the
+ *  road/trail `case` lives in each stop's OUTPUT value (a feature-property
+ *  branch is allowed there). The inverted (case-of-interpolates) form is invalid
+ *  and makes MapLibre reject the whole layer at addLayer time. */
 const WIDTH: ExpressionSpecification = [
-  "case", IS_TRAIL, TRAIL_WIDTH, ROAD_WIDTH,
-] as ExpressionSpecification;
-
-/** casing = line + ~2px halo; a zoom expr can't be nested in arithmetic, so each
- *  ramp is its own top-level interpolate, selected by the same kind `case`. */
-const ROAD_CASING_WIDTH: ExpressionSpecification = [
   "interpolate", ["linear"], ["zoom"],
-  4, 3.0,
-  7, 4.4,
-  10, 5.8,
-  14, 7.8,
+  4, ["case", IS_TRAIL, 1.0, 1.4],
+  7, ["case", IS_TRAIL, 1.7, 2.4],
+  10, ["case", IS_TRAIL, 2.4, 3.4],
+  14, ["case", IS_TRAIL, 3.5, 5.0],
 ] as ExpressionSpecification;
 
-const TRAIL_CASING_WIDTH: ExpressionSpecification = [
-  "interpolate", ["linear"], ["zoom"],
-  4, 2.4,
-  7, 3.6,
-  10, 4.8,
-  14, 6.2,
-] as ExpressionSpecification;
-
+/** casing = line + ~2px halo; same top-level-zoom rule as WIDTH. */
 const CASING_WIDTH: ExpressionSpecification = [
-  "case", IS_TRAIL, TRAIL_CASING_WIDTH, ROAD_CASING_WIDTH,
+  "interpolate", ["linear"], ["zoom"],
+  4, ["case", IS_TRAIL, 2.4, 3.0],
+  7, ["case", IS_TRAIL, 3.6, 4.4],
+  10, ["case", IS_TRAIL, 4.8, 5.8],
+  14, ["case", IS_TRAIL, 6.2, 7.8],
 ] as ExpressionSpecification;
 
 export function addRouteLayers(map: MLMap): void {
@@ -116,7 +103,8 @@ export function addRouteLayers(map: MLMap): void {
     },
   });
 
-  // Open routes: solid, full color.
+  // Open ROADS: solid, bold, full color. (updateRouteFilters scopes this layer
+  // to non-trail routes so trails can render dashed in their own layer below.)
   map.addLayer({
     id: ROUTE_LAYERS.open,
     type: "line",
@@ -130,13 +118,11 @@ export function addRouteLayers(map: MLMap): void {
     },
   });
 
-  // Open TRAILS only: a knockout dash overlay sitting directly on top of the
-  // solid open line. line-dasharray can't be data-driven, so the dash texture
-  // that tells trails apart from roads has to live in its own kind-filtered
-  // layer. Drawing it in the casing color (white) breaks the purple open-trail
-  // line into segments — the gaps fall back to the white halo, so the trail
-  // reads as a dashed purple line WITHOUT introducing a new hue (status stays
-  // encoded by color). Width matches the trail line so it cleanly punches it.
+  // Open TRAILS: same purple status color, but a thinner DASHED line so a rider
+  // can tell a single-track/rough trail from a graded road at a glance. Roads
+  // and trails are mutually exclusive between this layer and routes-open (the
+  // filters partition on `kind`), so there's no double-draw. line-dasharray
+  // can't be data-driven, which is exactly why trails need their own layer.
   map.addLayer({
     id: ROUTE_LAYERS.trail,
     type: "line",
@@ -144,10 +130,10 @@ export function addRouteLayers(map: MLMap): void {
     "source-layer": ROUTES_SOURCE_LAYER,
     layout: { "line-cap": "butt", "line-join": "round" },
     paint: {
-      "line-color": CASING_COLOR,
+      "line-color": STATUS.open,
       "line-width": TRAIL_WIDTH,
       "line-opacity": 1,
-      "line-dasharray": [1.5, 2],
+      "line-dasharray": [2, 1.6],
     },
   });
 }
@@ -162,9 +148,13 @@ export function updateRouteFilters(
   const open = isOpen(tokens, doy);
   const closed = ["!", open] as ExpressionSpecification;
 
-  map.setFilter(ROUTE_LAYERS.open, open);
+  // Partition open routes by kind: solid layer = open roads, dashed layer = open
+  // trails. Closed layer keeps both (dimmed gray dash already reads as closed).
+  map.setFilter(
+    ROUTE_LAYERS.open,
+    ["all", open, ["!", IS_TRAIL]] as ExpressionSpecification,
+  );
   map.setFilter(ROUTE_LAYERS.closed, closed);
-  // Dash overlay tracks the open layer but is scoped to trails only.
   map.setFilter(
     ROUTE_LAYERS.trail,
     ["all", open, IS_TRAIL] as ExpressionSpecification,

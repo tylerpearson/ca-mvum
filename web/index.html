@@ -78,15 +78,16 @@
           <span class="aqi-bar"></span>
           <span>Hazardous</span>
         </div>
-        <p id="fire-status" class="status"></p>
+        <p id="fire-status" class="status" role="status" aria-live="polite"></p>
+        <p id="smoke-status" class="status" role="status" aria-live="polite"></p>
+        <p id="aqi-status" class="status" role="status" aria-live="polite"></p>
       </fieldset>
 
       <div class="legend">
-        <div><span class="sw open"></span> Open to selected vehicle on date</div>
+        <div><span class="sw open"></span> Open road (graded)</div>
+        <div><span class="sw trail"></span> Open trail (finer, dashed)</div>
         <div><span class="sw closed"></span> Closed (out of season / not allowed)</div>
         <div><span class="sw affected"></span> Within an active fire perimeter</div>
-        <div><span class="sw road"></span> Road (graded)</div>
-        <div><span class="sw trail"></span> Trail (finer, dashed)</div>
       </div>
 
       <!-- "June 2026" mirrors DATA_VINTAGE in src/config.ts; keep them in sync. -->
