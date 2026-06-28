@@ -54,6 +54,12 @@ export const CLASS_LABELS: Record<string, string> = {
 export const ROUTES_PMTILES = "/tiles/routes.pmtiles";
 export const ROUTES_SOURCE_LAYER = "routes";
 
+/** MVUM tile build date — the point-in-time vintage of the route data baked
+ *  into routes.pmtiles. Unlike the live fire/smoke/AQI/snow overlays, routes are
+ *  only as fresh as the last pipeline run, so surface this to users. The pipeline
+ *  should update this on each `make tiles`. Mirrored in index.html (#data-vintage). */
+export const DATA_VINTAGE = "June 2026";
+
 /** California bounding box [west, south, east, north] for clipping live queries. */
 export const CA_BBOX: [number, number, number, number] = [-124.5, 32.5, -114.0, 42.1];
 
