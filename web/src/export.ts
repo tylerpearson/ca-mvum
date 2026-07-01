@@ -11,6 +11,7 @@
 
 import type { Map as MLMap, MapGeoJSONFeature } from "maplibre-gl";
 import { ROUTE_LAYERS } from "./style";
+import { esc } from "./escape";
 
 /** The subset of route feature properties we surface in the export. */
 interface RouteProps {
@@ -28,16 +29,6 @@ interface RouteGroup {
   name: string;
   desc: string;
   segments: number[][][];
-}
-
-/** XML-escape text for use in element content or attribute values. */
-function esc(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
 
 /** Flatten a route geometry into one coordinate run per line part. */

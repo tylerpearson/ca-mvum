@@ -13,6 +13,7 @@
 import maplibregl from "maplibre-gl";
 import type { Map as MLMap, MapMouseEvent } from "maplibre-gl";
 import { ROUTE_LAYERS } from "./style";
+import { esc } from "./escape";
 
 // --- NWS API -------------------------------------------------------------
 const NWS_POINTS_URL = "https://api.weather.gov/points";
@@ -129,15 +130,6 @@ export function sunTimes(
 
 // --- Rendering -----------------------------------------------------------
 const TIME_FMT: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
-
-/** Escape API/user text before it goes into popup innerHTML. */
-function esc(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 /** The sun row: rise / set / daylight-remaining, computed locally for `now`. */
 function sunRowHTML(lat: number, lng: number, now: Date): string {

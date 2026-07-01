@@ -82,7 +82,7 @@ export function recomputeAffected(map: MLMap): number {
     return 0;
   }
   const routes = map.queryRenderedFeatures(undefined, {
-    layers: [ROUTE_LAYERS.open],
+    layers: [ROUTE_LAYERS.open, ROUTE_LAYERS.trail],
   }) as MapGeoJSONFeature[];
 
   const hits: GeoJSON.Feature[] = [];
