@@ -71,8 +71,9 @@ export const ROUTES_SOURCE_LAYER = "routes";
 
 /** MVUM tile build date — the point-in-time vintage of the route data baked
  *  into routes.pmtiles. Unlike the live fire/smoke/AQI/snow overlays, routes are
- *  only as fresh as the last pipeline run, so surface this to users. The pipeline
- *  should update this on each `make tiles`. Mirrored in index.html (#data-vintage). */
+ *  only as fresh as the last pipeline run, so surface this to users. Updated
+ *  automatically by pipeline/build_tiles.py on each `make tiles`. Mirrored in
+ *  index.html (#data-vintage). */
 export const DATA_VINTAGE = "June 2026";
 
 /** California bounding box [west, south, east, north] for clipping live queries. */

@@ -1,0 +1,88 @@
+name: MVUM data refresh
+
+# Forest Service MVUMs get reissued, and the route data baked into
+# routes.pmtiles is only as fresh as the last pipeline run. This workflow runs
+# the full pipeline (fetch -> normalize -> tiles) on a monthly schedule (or on
+# demand) and, if the tiles actually changed, opens a pull request stamped
+# with the new DATA_VINTAGE (see pipeline/build_tiles.py:stamp_vintage).
+#
+# Safety property: this workflow NEVER merges anything. A human reviews and
+# merges every refresh PR — see the PR body for a reviewer checklist. Merging
+# to main triggers deploy-tiles.yml (R2 upload) and Cloudflare Pages (app
+# rebuild) automatically, same as any other change to those paths.
+#
+# Deviation from ci.yml/deploy-tiles.yml: this job needs `contents: write` and
+# `pull-requests: write` (not read-only) because it pushes the refresh branch
+# and opens the PR itself.
+
+on:
+  schedule:
+    # Monthly, 1st of the month at 14:17 UTC.
+    - cron: "17 14 1 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # Guard against forks running the schedule (and opening PRs against them).
+    if: github.repository == 'tylerpearson/ca-mvum'
+    steps:
+      # Actions pinned to commit SHAs (not mutable tags) so a retag can't
+      # swap the code that runs here.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+
+      - name: Install tippecanoe build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential libsqlite3-dev zlib1g-dev
+
+      - name: Build and install tippecanoe from source
+        run: |
+          git clone --depth 1 --branch 2.79.0 https://github.com/felt/tippecanoe /tmp/tippecanoe
+          cd /tmp/tippecanoe
+          make -j"$(nproc)"
+          sudo make install
+
+      - name: Install Python deps
+        run: uv sync --locked
+
+      - name: Run the data pipeline (fetch + normalize + tiles)
+        run: make data
+
+      - name: Check whether the tile file changed
+        id: diff
+        run: |
+          if git diff --quiet -- web/public/tiles/routes.pmtiles; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No change in web/public/tiles/routes.pmtiles; skipping PR."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "routes.pmtiles changed; opening a refresh PR."
+          fi
+
+      - name: Open pull request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
+        with:
+          branch: data-refresh/monthly
+          commit-message: "Refresh MVUM route data"
+          title: "MVUM data refresh"
+          body: |
+            Automated monthly refresh from `.github/workflows/data-refresh.yml`.
+
+            The pipeline (`make data`) re-fetched all 17 CA forests, renormalized,
+            and rebuilt `web/public/tiles/routes.pmtiles`, which changed as a
+            result. `DATA_VINTAGE` in `web/src/config.ts` and `web/index.html`
+            was stamped to the current month by `pipeline/build_tiles.py`.
+
+            **Before merging**, please spot-check a few forests against the
+            source MVUM PDFs/USFS EDW data — this workflow never auto-merges,
+            and merging triggers the R2 tile upload (`deploy-tiles.yml`) and a
+            Pages rebuild automatically.
+          add-paths: |
+            web/public/tiles/routes.pmtiles
+            web/src/config.ts
+            web/index.html
