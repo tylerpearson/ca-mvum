@@ -11,3 +11,9 @@ dependencies = [
 
 [tool.ca-mvum]
 # Build pipeline is run via the Makefile; see `make help`.
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
