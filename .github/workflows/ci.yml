@@ -1,0 +1,45 @@
+name: CI
+
+# Runs the test suites for both halves of the repo on every pull request and
+# on pushes to main. This is the one-command verification story for the
+# legal-accuracy core (season-window parsing in pipeline/normalize.py and the
+# MapLibre filter expressions in web/src/legal.ts) — see plans/002.
+
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+
+# Least privilege: these jobs only need to read the repo to check out code
+# and run tests; nothing here writes back to GitHub or external services.
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions pinned to commit SHAs (not mutable tags) so a retag can't
+      # swap the code that runs in CI.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install, typecheck, and test
+        run: |
+          cd web
+          npm ci
+          npx tsc --noEmit
+          npm test
+
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: Install deps and test
+        run: |
+          uv sync --locked
+          uv run pytest

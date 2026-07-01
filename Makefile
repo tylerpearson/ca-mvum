@@ -1,4 +1,4 @@
-.PHONY: help fetch normalize tiles data web-install dev build clean
+.PHONY: help fetch normalize tiles data web-install dev build clean test
 
 help:
 	@echo "ca-mvum build pipeline"
@@ -9,6 +9,7 @@ help:
 	@echo "  make web-install  npm install in web/"
 	@echo "  make dev          run the Vite dev server"
 	@echo "  make build        production static build -> web/dist"
+	@echo "  make test         run Python (pytest) and web (vitest) test suites"
 
 fetch:
 	uv run python -m pipeline.fetch_mvum
@@ -32,3 +33,7 @@ build:
 
 clean:
 	rm -f data/*.geojson
+
+test:
+	uv run pytest
+	cd web && npm test
