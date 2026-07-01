@@ -11,10 +11,9 @@
       content="Statewide California National Forest Motor Vehicle Use Map (MVUM): roads and trails open to motor vehicles by class and season, with live wildfire, smoke, and snow overlays."
     />
 
-    <!-- Open Graph / social. Update og:url to the real deploy URL on launch.
-         og:image intentionally omitted for now — add a hosted share image (follow-up). -->
+    <!-- Open Graph / social. social.png is a copy of docs/screenshot.png (1440×813). -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://example.com/" />
+    <meta property="og:url" content="https://ca-mvum.typearson.dev/" />
     <meta
       property="og:title"
       content="California MVUM — motor vehicle routes, live fire / smoke / snow"
@@ -23,7 +22,12 @@
       property="og:description"
       content="Statewide California National Forest Motor Vehicle Use Map (MVUM): roads and trails open to motor vehicles by class and season, with live wildfire, smoke, and snow overlays."
     />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://ca-mvum.typearson.dev/social.png" />
+    <meta
+      property="og:image:alt"
+      content="Map of California National Forest motor-vehicle routes with the open network drawn in purple"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
       content="California MVUM — motor vehicle routes, live fire / smoke / snow"
@@ -32,6 +36,7 @@
       name="twitter:description"
       content="Statewide California National Forest Motor Vehicle Use Map (MVUM): roads and trails open to motor vehicles by class and season, with live wildfire, smoke, and snow overlays."
     />
+    <meta name="twitter:image" content="https://ca-mvum.typearson.dev/social.png" />
   </head>
   <body>
     <div id="map" aria-label="Map of California National Forest motor-vehicle routes"></div>
@@ -81,6 +86,7 @@
         <p id="fire-status" class="status" role="status" aria-live="polite"></p>
         <p id="smoke-status" class="status" role="status" aria-live="polite"></p>
         <p id="aqi-status" class="status" role="status" aria-live="polite"></p>
+        <p id="snow-status" class="status" role="status" aria-live="polite"></p>
       </fieldset>
 
       <div class="legend">
