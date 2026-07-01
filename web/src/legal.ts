@@ -2,10 +2,21 @@
 // selected vehicle class on the selected date?"
 //
 // Mirrors the data model from pipeline/normalize.py:
-//   classes     ",passenger,motorcycle,"   (comma-delimited token list)
-//   season      "yearlong" | "seasonal"
-//   open_start  day-of-year 1..365 (non-leap convention)
-//   open_end    day-of-year 1..365 (non-leap convention)  (may be < open_start for winter-wrapping)
+//   classes      ",passenger,motorcycle,"   (comma-delimited token list)
+//   season       "yearlong" | "seasonal"    (representative summary; display only)
+//   open_start   day-of-year 1..365 (non-leap convention, representative — display only)
+//   open_end     day-of-year 1..365 (non-leap convention, representative — display only)
+//   os_<class>   day-of-year 1..365 — start of THAT class's bounded window.
+//                Present only when the class is permitted and its window is
+//                bounded (not year-round). Missing means yearlong for that class.
+//   oe_<class>   day-of-year 1..365 — end of that class's bounded window,
+//                paired with os_<class> (may be < os_<class> for winter-wrapping).
+//
+// Per-class windows are the authoritative source for per-vehicle-profile
+// filtering: two classes on the same route can have genuinely different
+// season windows (e.g. passenger yearlong, motorcycle seasonal), so `isOpen`
+// evaluates each requested class token against ITS OWN os_/oe_ fields rather
+// than the route-level representative window.
 
 import type { ExpressionSpecification } from "maplibre-gl";
 
@@ -20,35 +31,30 @@ export function dayOfYear(d: Date): number {
   return MONTH_START[d.getMonth() + 1] + d.getDate();
 }
 
-/** True-expression: the route permits ANY of the profile's class tokens.
- *  A street-legal profile passes several tokens (highway-legal roads + its OHV
- *  trails); an OHV-only profile passes one. */
-export function classPermitted(tokens: string[]): ExpressionSpecification {
-  const anyOf = tokens.map(
-    (t) => ["in", `,${t},`, ["get", "classes"]] as ExpressionSpecification,
-  );
-  return ["any", ...anyOf] as ExpressionSpecification;
-}
-
-/** True-expression: the route's season window contains `doy`. */
-export function dateInSeason(doy: number): ExpressionSpecification {
+/** True-expression: the route permits `token` AND `token`'s own season
+ *  window (os_<token>/oe_<token>, defaulting to yearlong when absent)
+ *  contains `doy`. */
+function openForToken(token: string, doy: number): ExpressionSpecification {
+  const start = ["coalesce", ["get", `os_${token}`], 1] as ExpressionSpecification;
+  const end = ["coalesce", ["get", `oe_${token}`], 365] as ExpressionSpecification;
   return [
-    "case",
-    ["==", ["get", "season"], "yearlong"],
-    true,
-    // normal window: start <= end
-    ["<=", ["get", "open_start"], ["get", "open_end"]],
+    "all",
+    ["in", `,${token},`, ["get", "classes"]],
     [
-      "all",
-      [">=", doy, ["get", "open_start"]],
-      ["<=", doy, ["get", "open_end"]],
+      "case",
+      // normal window: start <= end
+      ["<=", start, end],
+      ["all", [">=", doy, start], ["<=", doy, end]],
+      // wrapping window (e.g. winter): open if after start OR before end
+      ["any", [">=", doy, start], ["<=", doy, end]],
     ],
-    // wrapping window (e.g. winter): open if after start OR before end
-    ["any", [">=", doy, ["get", "open_start"]], ["<=", doy, ["get", "open_end"]]],
   ] as unknown as ExpressionSpecification;
 }
 
-/** Combined: permitted for the profile AND in-season on the date. */
+/** True-expression: the route is open to ANY of the profile's class tokens
+ *  on `doy`, each evaluated against its own per-class window (ANY semantics —
+ *  a street-legal profile passes several tokens; an OHV-only profile passes
+ *  one). */
 export function isOpen(tokens: string[], doy: number): ExpressionSpecification {
-  return ["all", classPermitted(tokens), dateInSeason(doy)] as ExpressionSpecification;
+  return ["any", ...tokens.map((t) => openForToken(t, doy))] as ExpressionSpecification;
 }

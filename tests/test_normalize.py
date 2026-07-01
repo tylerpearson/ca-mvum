@@ -77,10 +77,9 @@ class TestNormalizeFeature:
         assert (result["open_start"], result["open_end"]) == (1, 365)
 
     def test_multi_class_representative_window_collapse(self):
-        # Characterizes the representative-window collapse: a bounded window
-        # on ANY permitted class makes the whole route read "seasonal", even
-        # though the passenger class itself is yearlong-permitted here.
-        # Plan 005 changes this per-class behavior; update this test then.
+        # Plan 005: per-class windows are now emitted so divergent classes
+        # read correctly per vehicle profile, even though the route still
+        # carries a representative season/open_start/open_end for display.
         result = normalize_feature(
             {
                 "passengervehicle_datesopen": "open",
@@ -93,6 +92,42 @@ class TestNormalizeFeature:
         assert result["season"] == "seasonal"
         assert result["open_start"] == 121
         assert result["open_end"] == 319
+        assert result["os_motorcycle"] == 121
+        assert result["oe_motorcycle"] == 319
+        assert "os_passenger" not in result
+        assert "oe_passenger" not in result
+        assert result["window_text"].endswith("(varies by class)")
+
+    def test_shared_window_across_classes_no_variance_suffix(self):
+        result = normalize_feature(
+            {
+                "passengervehicle_datesopen": "05/01-11/15",
+                "motorcycle_datesopen": "05/01-11/15",
+            }
+        )
+        assert result is not None
+        assert result["os_passenger"] == 121
+        assert result["oe_passenger"] == 319
+        assert result["os_motorcycle"] == 121
+        assert result["oe_motorcycle"] == 319
+        assert result["window_text"] == "05/01-11/15"
+
+    def test_all_yearlong_route_has_no_window_fields(self):
+        result = normalize_feature(
+            {
+                "passengervehicle_datesopen": "open",
+                "motorcycle_datesopen": "open",
+            }
+        )
+        assert result is not None
+        assert result["season"] == "yearlong"
+        assert not any(k.startswith(("os_", "oe_")) for k in result)
+
+    def test_ebike_only_route_has_no_window_fields(self):
+        result = normalize_feature({"e_bike_class1": "yes"})
+        assert result is not None
+        assert result["classes"] == ",e_bike1,"
+        assert not any(k.startswith(("os_", "oe_")) for k in result)
 
     def test_ebike_gate_yes(self):
         result = normalize_feature(

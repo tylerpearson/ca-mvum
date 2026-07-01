@@ -15,10 +15,21 @@ Output per feature keeps only what the map needs:
 
   name, id, forest, district, surface, maintlevel, symbol_name, miles, kind
   classes      ",passenger,motorcycle,atv,"  (comma-delimited; substring-filterable)
-  season       "yearlong" | "seasonal"
+  season       "yearlong" | "seasonal"       (any permitted class has a bounded window)
   open_start   day-of-year 1..366 (representative window start)
   open_end     day-of-year 1..366 (representative window end)
-  window_text  "01/01-12/31"      (human-readable representative window)
+  window_text  "01/01-12/31"      (human-readable representative window; suffixed
+                                   " (varies by class)" when permitted classes'
+                                   parsed windows genuinely differ)
+  os_<class>   day-of-year 1..365 (start of THAT class's bounded window) — only
+               present when the class is permitted AND its window is bounded
+               (i.e. not year-round). E-bike classes never get os_/oe_ fields.
+  oe_<class>   day-of-year 1..365 (end of that class's bounded window) — paired
+               with os_<class>; a class with no os_/oe_ fields is yearlong.
+
+`open_start`/`open_end`/`season` remain a representative (Counter-derived)
+summary for display/back-compat; the per-class `os_/oe_` fields are the
+authoritative source for per-vehicle-profile filtering in the frontend.
 
 Run:  uv run python -m pipeline.normalize
 """
@@ -109,13 +120,13 @@ def parse_window(raw) -> tuple[int, int] | None:
 def normalize_feature(props: dict) -> dict | None:
     """Map one raw MVUM properties dict to the compact schema. None to drop."""
     allowed: list[str] = []
-    windows: list[tuple[int, int]] = []
+    class_windows: dict[str, tuple[int, int]] = {}
 
     for key, field in CLASS_DATEFIELD.items():
         win = parse_window(props.get(field))
         if win is not None:
             allowed.append(key)
-            windows.append(win)
+            class_windows[key] = win
 
     for key, field in EBIKE_FIELDS.items():
         v = props.get(field)
@@ -125,9 +136,12 @@ def normalize_feature(props: dict) -> dict | None:
     if not allowed:
         return None  # no motorized class permitted -> not useful on this map
 
+    windows = list(class_windows.values())
+
     # Representative window = the most common bounded window among permitted
     # classes; fall back to year-round. Seasonal closures typically gate the
-    # whole segment, so classes usually share one window.
+    # whole segment, so classes usually share one window. (Display/back-compat
+    # summary only — per-class os_/oe_ fields below are authoritative.)
     bounded = [w for w in windows if w != (1, 365)]
     if bounded:
         start, end = Counter(bounded).most_common(1)[0][0]
@@ -136,7 +150,7 @@ def normalize_feature(props: dict) -> dict | None:
         start, end = 1, 365
         season = "yearlong"
 
-    return {
+    out = {
         "name": (props.get("name") or "").strip() or None,
         "id": (props.get("id") or "").strip() or None,
         "forest": props.get("forestname"),
@@ -150,14 +164,25 @@ def normalize_feature(props: dict) -> dict | None:
         "season": season,
         "open_start": start,
         "open_end": end,
-        "window_text": _window_text(start, end),
+        "window_text": _window_text(start, end, varies=len(set(windows)) > 1),
     }
 
+    # Per-class window fields: emitted only for permitted, non-ebike classes
+    # whose parsed window is bounded (not year-round). A class with no
+    # os_/oe_ fields is yearlong by convention (frontend coalesces to 1..365).
+    for key, win in class_windows.items():
+        if win != (1, 365):
+            out[f"os_{key}"] = win[0]
+            out[f"oe_{key}"] = win[1]
 
-def _window_text(start: int, end: int) -> str:
+    return out
+
+
+def _window_text(start: int, end: int, varies: bool = False) -> str:
     if (start, end) == (1, 365):
         return "Yearlong"
-    return f"{_doy_to_md(start)}-{_doy_to_md(end)}"
+    text = f"{_doy_to_md(start)}-{_doy_to_md(end)}"
+    return f"{text} (varies by class)" if varies else text
 
 
 def _doy_to_md(doy: int) -> str:
