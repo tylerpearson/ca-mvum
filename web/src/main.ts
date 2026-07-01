@@ -11,6 +11,7 @@ import {
   addRouteLayers, updateRouteFilters, ROUTE_LAYERS,
 } from "./style";
 import { dayOfYear } from "./legal";
+import { esc } from "./escape";
 import {
   initFire, refreshFirePerimeters, recomputeAffected, setFireVisible,
 } from "./fire";
@@ -211,7 +212,7 @@ function popupHtml(p: Record<string, unknown>, inFire: boolean): string {
     ["Season", String(p.window_text ?? "—")],
     ["Open to", allowed || "—"],
   ];
-  const body = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  const body = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
   const warn = inFire ? `<p class="pop-warn">⚠ Within an active fire perimeter</p>` : "";
   // Link to the forest's official MVUM — the authoritative source this route was
   // derived from, and where to confirm the legal designation before a trip.
@@ -219,10 +220,10 @@ function popupHtml(p: Record<string, unknown>, inFire: boolean): string {
   const link =
     `<p class="pop-link"><a href="${mvum}" target="_blank" rel="noopener noreferrer">` +
     `Official MVUM ↗</a></p>`;
-  return `<div class="pop"><h3>${title}</h3>${warn}<dl>${body}</dl>${link}</div>`;
+  return `<div class="pop"><h3>${esc(title)}</h3>${warn}<dl>${body}</dl>${link}</div>`;
 }
 
-for (const layer of [ROUTE_LAYERS.open, ROUTE_LAYERS.closed, ROUTE_LAYERS.affected]) {
+for (const layer of [ROUTE_LAYERS.open, ROUTE_LAYERS.trail, ROUTE_LAYERS.closed, ROUTE_LAYERS.affected]) {
   map.on("click", layer, (e) => {
     const f = e.features?.[0];
     if (!f) return;
