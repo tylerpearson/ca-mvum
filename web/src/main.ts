@@ -111,7 +111,11 @@ for (const p of VEHICLE_PROFILES) {
 const paramVehicle = new URLSearchParams(location.search).get("vehicle");
 vehicleSel.value =
   VEHICLE_PROFILES.some((p) => p.key === paramVehicle) ? paramVehicle! : "moto_plated";
-dateInput.value = new Date().toISOString().slice(0, 10);
+// Local date, not the UTC ISO date string: in the evening (UTC is past
+// midnight) the default must still be *today* here — "the night before" is
+// the primary use.
+const now = new Date();
+dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 hideClosed.checked = new URLSearchParams(location.search).get("hideclosed") === "1";
 
 function selectedTokens(): string[] {
