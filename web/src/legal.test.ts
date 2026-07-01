@@ -30,12 +30,18 @@ describe("dayOfYear", () => {
     expect(dayOfYear(new Date(2026, 11, 31))).toBe(365);
   });
 
-  // Characterizes CURRENT (mismatched) behavior: dayOfYear uses the real
-  // calendar (366 in a leap year) while the pipeline's _doy uses a fixed
-  // non-leap table (max 365). Plan 004 reconciles these; when it does,
-  // this assertion must change to reflect the new convention.
-  it("returns 366 for Dec 31 in a leap year (current mismatched behavior)", () => {
-    expect(dayOfYear(new Date(2028, 11, 31))).toBe(366);
+  // non-leap convention — must match pipeline/normalize.py _MONTH_START
+  it("returns 365 for Dec 31 in a leap year (non-leap convention)", () => {
+    expect(dayOfYear(new Date(2028, 11, 31))).toBe(365);
+  });
+
+  it("Feb 29 maps to the same value as Mar 1 (non-leap convention)", () => {
+    expect(dayOfYear(new Date(2028, 1, 29))).toBe(60);
+    expect(dayOfYear(new Date(2028, 2, 1))).toBe(60);
+  });
+
+  it("matches the pipeline's parse_window start for 05/01 (cross-convention anchor)", () => {
+    expect(dayOfYear(new Date(2026, 4, 1))).toBe(121);
   });
 });
 
@@ -134,5 +140,10 @@ describe("isOpen (combined)", () => {
 
   it("permitted class and in season -> true", () => {
     expect(evalOpen(["passenger"], 200, props)).toBe(true);
+  });
+
+  it("a window ending 12/31 (open_end=365) is OPEN on Dec 31 of a leap year (the leap-year bug this plan fixes)", () => {
+    const leapProps = { classes: ",passenger,", season: "seasonal", open_start: 121, open_end: 365 };
+    expect(evalOpen(["passenger"], dayOfYear(new Date(2028, 11, 31)), leapProps)).toBe(true);
   });
 });
