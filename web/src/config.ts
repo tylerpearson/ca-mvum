@@ -8,6 +8,11 @@
 // So each selector option is a *profile* that maps to a set of underlying MVUM
 // class tokens (emitted in `classes` by pipeline/normalize.py); a route is open
 // to the profile if it permits ANY of those tokens.
+//
+// suv4x4 includes the 4WD/2WD >50″ classes: MVUM designates by vehicle
+// type/width, and a street-legal 4×4 IS a 4WD >50″ — without these tokens,
+// gt50-only jeep trails (e.g. Bronco Peak, Cleveland NF) would never show
+// open for anyone.
 
 export interface VehicleProfile {
   key: string;
@@ -19,7 +24,7 @@ export interface VehicleProfile {
 export const VEHICLE_PROFILES: VehicleProfile[] = [
   // Street-legal: highway-legal roads are the big set; plated bikes add moto trails.
   { key: "moto_plated", label: "Dual-sport motorcycle (plated)", group: "Street-legal (plated)", tokens: ["passenger", "high_clearance", "motorcycle"] },
-  { key: "suv4x4", label: "SUV / 4×4 / truck (street-legal)", group: "Street-legal (plated)", tokens: ["passenger", "high_clearance"] },
+  { key: "suv4x4", label: "SUV / 4×4 / truck (street-legal)", group: "Street-legal (plated)", tokens: ["passenger", "high_clearance", "4wd_gt50", "2wd_gt50"] },
   { key: "car", label: "Car / passenger (street-legal)", group: "Street-legal (plated)", tokens: ["passenger"] },
   // Off-road only: OHV-designated routes for that class.
   { key: "dirtbike", label: "Dirt bike (OHV / green sticker)", group: "Off-road only (green / red sticker)", tokens: ["motorcycle"] },
