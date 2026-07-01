@@ -46,8 +46,8 @@ const style: maplibregl.StyleSpecification = {
       tiles: ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"],
       attribution: "USGS The National Map",
     },
-    // The "routes" vector source is added in map.on("load") once the in-memory
-    // PMTiles archive (archiveReady) is registered with the protocol — see above.
+    // The "routes" vector source is added in map.on("load"); PMTiles fetches
+    // tiles lazily over HTTP range requests — see the protocol setup above.
   },
   layers: [
     {
@@ -92,6 +92,7 @@ const snowToggle = $("layer-snow") as HTMLInputElement;
 const fireStatus = $("fire-status") as HTMLParagraphElement;
 const smokeStatus = $("smoke-status") as HTMLParagraphElement;
 const aqiStatus = $("aqi-status") as HTMLParagraphElement;
+const snowStatus = $("snow-status") as HTMLParagraphElement;
 
 // Grouped selector: Street-legal (plated) vs Off-road only (green/red sticker).
 const groups = new Map<string, HTMLOptGroupElement>();
@@ -176,9 +177,12 @@ async function toggleAqi(on: boolean): Promise<void> {
   try {
     const worst = await refreshAqi(map);
     const cat = AQI_CATEGORIES.find((c) => c.code === worst);
-    aqiStatus.textContent = worst <= 1
-      ? "Air quality: Good across California right now"
-      : `Air quality reaches “${cat?.label ?? "elevated"}” somewhere in California today`;
+    aqiStatus.textContent =
+      worst === 0
+        ? "No AirNow air-quality data for California right now"
+        : worst === 1
+          ? "Air quality: Good across California right now"
+          : `Air quality reaches “${cat?.label ?? "elevated"}” somewhere in California today`;
   } catch (e) {
     aqiStatus.textContent = "Couldn't load air quality — try again later";
     console.error(e);
@@ -188,7 +192,12 @@ async function toggleAqi(on: boolean): Promise<void> {
 fireToggle.addEventListener("change", () => void toggleFire(fireToggle.checked));
 smokeToggle.addEventListener("change", () => void toggleSmoke(smokeToggle.checked));
 aqiToggle.addEventListener("change", () => void toggleAqi(aqiToggle.checked));
-snowToggle.addEventListener("change", () => setSnowVisible(map, snowToggle.checked));
+snowToggle.addEventListener("change", () => {
+  setSnowVisible(map, snowToggle.checked);
+  snowStatus.textContent = snowToggle.checked
+    ? "Showing modeled snow depth (NOHRSC) — darker = deeper; verify locally"
+    : "";
+});
 vehicleSel.addEventListener("change", applyFilters);
 dateInput.addEventListener("change", applyFilters);
 hideClosed.addEventListener("change", applyFilters);

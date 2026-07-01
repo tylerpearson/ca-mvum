@@ -30,31 +30,6 @@ LAYERS = {1: "road", 2: "trail"}  # layer id -> kind
 PAGE_SIZE = 1000
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
-# Attribute fields we keep. Includes display fields, the per-vehicle-class yes/no
-# permission flags, and their seasonal `*_datesopen` companions.
-OUT_FIELDS = ",".join(
-    [
-        # identity / display
-        "name", "id", "forestname", "districtname",
-        "surfacetype", "operationalmaintlevel", "symbol", "mvum_symbol_name",
-        "seasonal", "gis_miles",
-        # vehicle-class permissions
-        "passengervehicle", "highclearancevehicle", "truck", "bus", "motorhome",
-        "fourwd_gt50inches", "twowd_gt50inches",
-        "tracked_ohv_gt50inches", "other_ohv_gt50inches",
-        "atv", "motorcycle", "otherwheeled_ohv",
-        "tracked_ohv_lt50inches", "other_ohv_lt50inches",
-        "e_bike_class1", "e_bike_class2", "e_bike_class3",
-        # seasonal date windows
-        "passengervehicle_datesopen", "highclearancevehicle_datesopen",
-        "truck_datesopen", "bus_datesopen", "motorhome_datesopen",
-        "fourwd_gt50_datesopen", "twowd_gt50_datesopen",
-        "tracked_ohv_gt50_datesopen", "other_ohv_gt50_datesopen",
-        "atv_datesopen", "motorcycle_datesopen", "otherwheeled_ohv_datesopen",
-        "tracked_ohv_lt50_datesopen", "other_ohv_lt50_datesopen",
-    ]
-)
-
 
 def _query_page(client: httpx.Client, layer: int, where: str, offset: int) -> dict:
     """One page of a layer query as GeoJSON, with transfer-limit info."""
