@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { expression } from "@maplibre/maplibre-gl-style-spec";
-import { dayOfYear, classPermitted, dateInSeason, isOpen } from "./legal";
+import { dayOfYear, isOpen } from "./legal";
 import type { ExpressionSpecification } from "maplibre-gl";
 
 /** Evaluate a MapLibre expression against a synthetic feature's properties. */
@@ -45,90 +45,78 @@ describe("dayOfYear", () => {
   });
 });
 
-describe("classPermitted", () => {
+describe("isOpen: class permission (delimiter safety)", () => {
   it("matches when the token is present as a delimited entry", () => {
-    const result = evalExpr(classPermitted(["passenger"]), { classes: ",passenger," });
-    expect(result).toBe(true);
+    expect(evalOpen(["passenger"], 1, { classes: ",passenger," })).toBe(true);
   });
 
   it("does not match when the token is absent", () => {
-    const result = evalExpr(classPermitted(["passenger"]), { classes: ",atv," });
-    expect(result).toBe(false);
+    expect(evalOpen(["passenger"], 1, { classes: ",atv," })).toBe(false);
   });
 
   it("matches a multi-token profile against a route with only one of the tokens", () => {
-    const result = evalExpr(classPermitted(["passenger", "high_clearance"]), {
-      classes: ",high_clearance,",
-    });
-    expect(result).toBe(true);
+    expect(
+      evalOpen(["passenger", "high_clearance"], 1, { classes: ",high_clearance," }),
+    ).toBe(true);
   });
 
   it("delimiters prevent bare-substring hits (,atv, does not match ,utv_atv_x,)", () => {
-    const result = evalExpr(classPermitted(["atv"]), { classes: ",utv_atv_x," });
-    expect(result).toBe(false);
+    expect(evalOpen(["atv"], 1, { classes: ",utv_atv_x," })).toBe(false);
   });
 });
 
-describe("dateInSeason", () => {
-  it("yearlong season is open regardless of window fields, at doy 1", () => {
-    const result = evalExpr(dateInSeason(1), {
-      season: "yearlong",
-      open_start: 999,
-      open_end: -999,
-    });
-    expect(result).toBe(true);
+describe("isOpen: per-token season window", () => {
+  it("missing os_/oe_ fields mean yearlong: open at doy 1, 200, 365", () => {
+    const props = { classes: ",atv," };
+    expect(evalOpen(["atv"], 1, props)).toBe(true);
+    expect(evalOpen(["atv"], 200, props)).toBe(true);
+    expect(evalOpen(["atv"], 365, props)).toBe(true);
   });
 
-  it("yearlong season is open regardless of window fields, at doy 366", () => {
-    const result = evalExpr(dateInSeason(366), {
-      season: "yearlong",
-      open_start: 999,
-      open_end: -999,
-    });
-    expect(result).toBe(true);
-  });
-
-  describe("normal (non-wrapping) window: open_start=121, open_end=319", () => {
-    const props = { season: "seasonal", open_start: 121, open_end: 319 };
+  describe("normal (non-wrapping) window: os_atv=121, oe_atv=319", () => {
+    const props = { classes: ",atv,", os_atv: 121, oe_atv: 319 };
     it("open at the start boundary (121)", () => {
-      expect(evalExpr(dateInSeason(121), props)).toBe(true);
+      expect(evalOpen(["atv"], 121, props)).toBe(true);
     });
     it("open in the middle (200)", () => {
-      expect(evalExpr(dateInSeason(200), props)).toBe(true);
+      expect(evalOpen(["atv"], 200, props)).toBe(true);
     });
     it("open at the end boundary (319)", () => {
-      expect(evalExpr(dateInSeason(319), props)).toBe(true);
+      expect(evalOpen(["atv"], 319, props)).toBe(true);
     });
     it("closed just before the start (120)", () => {
-      expect(evalExpr(dateInSeason(120), props)).toBe(false);
+      expect(evalOpen(["atv"], 120, props)).toBe(false);
     });
     it("closed just after the end (320)", () => {
-      expect(evalExpr(dateInSeason(320), props)).toBe(false);
+      expect(evalOpen(["atv"], 320, props)).toBe(false);
     });
   });
 
-  describe("wrapping (winter) window: open_start=305, open_end=90", () => {
-    const props = { season: "seasonal", open_start: 305, open_end: 90 };
+  describe("wrapping (winter) per-token window: os_atv=305, oe_atv=90", () => {
+    const props = { classes: ",atv,", os_atv: 305, oe_atv: 90 };
     it("open just after the start (306)", () => {
-      expect(evalExpr(dateInSeason(306), props)).toBe(true);
+      expect(evalOpen(["atv"], 306, props)).toBe(true);
     });
     it("open at year end (366)", () => {
-      expect(evalExpr(dateInSeason(366), props)).toBe(true);
+      expect(evalOpen(["atv"], 366, props)).toBe(true);
     });
     it("open at year start (1)", () => {
-      expect(evalExpr(dateInSeason(1), props)).toBe(true);
+      expect(evalOpen(["atv"], 1, props)).toBe(true);
     });
     it("open just before the end (89)", () => {
-      expect(evalExpr(dateInSeason(89), props)).toBe(true);
+      expect(evalOpen(["atv"], 89, props)).toBe(true);
+    });
+    it("open at 320 (this plan's test vector)", () => {
+      expect(evalOpen(["atv"], 320, props)).toBe(true);
     });
     it("closed in the middle of the off-season (200)", () => {
-      expect(evalExpr(dateInSeason(200), props)).toBe(false);
+      expect(evalOpen(["atv"], 200, props)).toBe(false);
     });
   });
 });
 
 describe("isOpen (combined)", () => {
-  const props = { classes: ",passenger,", season: "seasonal", open_start: 121, open_end: 319 };
+  const props = { classes: ",passenger,", os_passenger: 121, oe_passenger: 319 };
 
   it("permitted class but out of season -> false", () => {
     expect(evalOpen(["passenger"], 1, props)).toBe(false);
@@ -142,8 +130,34 @@ describe("isOpen (combined)", () => {
     expect(evalOpen(["passenger"], 200, props)).toBe(true);
   });
 
-  it("a window ending 12/31 (open_end=365) is OPEN on Dec 31 of a leap year (the leap-year bug this plan fixes)", () => {
-    const leapProps = { classes: ",passenger,", season: "seasonal", open_start: 121, open_end: 365 };
+  it("a window ending 12/31 (oe_passenger=365) is OPEN on Dec 31 of a leap year (the leap-year convention this plan preserves)", () => {
+    const leapProps = { classes: ",passenger,", os_passenger: 121, oe_passenger: 365 };
     expect(evalOpen(["passenger"], dayOfYear(new Date(2028, 11, 31)), leapProps)).toBe(true);
+  });
+});
+
+describe("isOpen: per-class divergent windows (the HAY FLAT bug this plan fixes)", () => {
+  const props = {
+    classes: ",passenger,high_clearance,",
+    os_high_clearance: 91,
+    oe_high_clearance: 365,
+  };
+
+  it("passenger is yearlong (no os_/oe_ fields) -> open at doy 50", () => {
+    expect(evalOpen(["passenger"], 50, props)).toBe(true);
+  });
+
+  it("high_clearance's own window excludes doy 50 -> closed", () => {
+    expect(evalOpen(["high_clearance"], 50, props)).toBe(false);
+  });
+
+  it("ANY semantics: a profile passing both tokens is open at doy 50 because passenger is", () => {
+    expect(evalOpen(["passenger", "high_clearance"], 50, props)).toBe(true);
+  });
+
+  it("at doy 200 (inside high_clearance's window too) all three checks are open", () => {
+    expect(evalOpen(["passenger"], 200, props)).toBe(true);
+    expect(evalOpen(["high_clearance"], 200, props)).toBe(true);
+    expect(evalOpen(["passenger", "high_clearance"], 200, props)).toBe(true);
   });
 });
