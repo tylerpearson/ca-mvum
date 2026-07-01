@@ -60,15 +60,15 @@ data, never buried or decorated.
   "verify before you go" disclaimer is permanent, not a dismissible toast.
 - **Cartographic heritage, used not pastiched.** Quad-map typographic and color
   cues earn their place by aiding legibility; they are not decoration.
-- **Legible in the field.** Readable in bright sun and in the dark — both
-  themes hit contrast targets; the map stays scannable at a glance.
+- **Legible in the field.** Readable in bright sun — the light theme hits AA
+  contrast targets; the map stays scannable at a glance.
 
 ## Accessibility & Inclusion
 
-Target WCAG 2.1 AA in both light and dark themes. Body text ≥4.5:1, large/UI
-text ≥3:1 against panel surfaces. Route status (open / closed / not-allowed /
-in-fire) must never rely on color alone — pair color with line pattern, label,
-and legend so it survives color-blindness and a sun-washed screen. Honor
-`prefers-reduced-motion` (map already animates on pan/zoom; UI transitions get a
-non-motion fallback). Live overlays carry text legends, not just color washes.
-Default theme follows `prefers-color-scheme`.
+Target WCAG 2.1 AA in the light theme (the app is deliberately light-only — see
+DESIGN.md "Theme decision"). Body text ≥4.5:1, large/UI text ≥3:1 against panel
+surfaces. Route status (open / closed / not-allowed / in-fire) must never rely on
+color alone — pair color with line pattern, label, and legend so it survives
+color-blindness and a sun-washed screen. Honor `prefers-reduced-motion` (map
+already animates on pan/zoom; UI transitions get a non-motion fallback). Live
+overlays carry text legends, not just color washes.

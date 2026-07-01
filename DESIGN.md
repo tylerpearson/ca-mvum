@@ -1,9 +1,9 @@
 # Design
 
 Visual system for the California MVUM map. Register: **product** (the map is the
-hero; chrome is the printed map's margin). Theme: light + dark, default follows
-`prefers-color-scheme`. Colors are authored in **OKLCH**; map-layer paint uses
-hex/rgba because MapLibre's color parser predates OKLCH.
+hero; chrome is the printed map's margin). Theme: **light-only** — a deliberate
+decision, see "Theme decision" below. Colors are authored in **OKLCH**; map-layer
+paint uses hex/rgba because MapLibre's color parser predates OKLCH.
 
 ## Theme & strategy
 
@@ -12,16 +12,25 @@ neutral cool-gray surfaces, and a separate **semantic status set** for the map
 itself. The "warmth/character" is carried by the heritage serif display face and
 the cartographic basemap — never by a cream surface (explicitly avoided).
 
+## Theme decision
+
+The app shipped light-only (commit `44afc7e`). The design is anchored to the
+desaturated USGS topo sheet, which has no dark counterpart with equivalent
+cartographic quality. Field context (sun glare) makes the light sheet the primary
+surface. Decided 2026-07-01 to amend docs rather than build dark. Revisit only if
+night-time field use becomes a real demand; the removed dark-token column can be
+recovered from git history at `ea0a597`.
+
 ## Color tokens (`web/src/styles.css`)
 
-| Role | Light | Dark |
-|------|-------|------|
-| `--ink` (body) | `oklch(0.24 0.02 250)` | `oklch(0.93 0.012 250)` |
-| `--muted` | `oklch(0.5 0.02 250)` | `oklch(0.68 0.02 250)` |
-| `--panel` | `oklch(0.99 0.004 250)` | `oklch(0.19 0.018 250)` |
-| `--surface` | `oklch(0.965 0.006 250)` | `oklch(0.235 0.02 250)` |
-| `--border` | `oklch(0.88 0.008 250)` | `oklch(0.34 0.02 250)` |
-| `--primary` | `oklch(0.52 0.13 250)` | `oklch(0.74 0.12 250)` |
+| Role | Value |
+|------|-------|
+| `--ink` (body) | `oklch(0.24 0.02 250)` |
+| `--muted` | `oklch(0.5 0.02 250)` |
+| `--panel` | `oklch(0.99 0.004 250)` |
+| `--surface` | `oklch(0.965 0.006 250)` |
+| `--border` | `oklch(0.88 0.008 250)` |
+| `--primary` | `oklch(0.52 0.13 250)` |
 
 ### Map status colors (semantic; mirrored in legend swatches)
 
@@ -69,6 +78,4 @@ control hover/focus only. Map pan/zoom is MapLibre's own. Full
 
 ## Basemaps
 
-- Light: **USGS Topo** (`basemap.nationalmap.gov`) — the cartographic anchor.
-- Dark: **Esri World Dark Gray** base + reference labels.
-The theme toggle swaps basemap + chrome together.
+- **USGS Topo** (`basemap.nationalmap.gov`) — the cartographic anchor.
