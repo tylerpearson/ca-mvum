@@ -74,7 +74,7 @@ export const ROUTES_SOURCE_LAYER = "routes";
  *  only as fresh as the last pipeline run, so surface this to users. Updated
  *  automatically by pipeline/build_tiles.py on each `make tiles`. Mirrored in
  *  index.html (#data-vintage). */
-export const DATA_VINTAGE = "June 2026";
+export const DATA_VINTAGE = "July 2026";
 
 /** California bounding box [west, south, east, north] for clipping live queries. */
 export const CA_BBOX: [number, number, number, number] = [-124.5, 32.5, -114.0, 42.1];

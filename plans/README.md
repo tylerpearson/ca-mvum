@@ -15,15 +15,33 @@ Repo ground rules for every executor: `main` auto-deploys to production
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
-| 001  | Trails in popups + fire intersection; escape popup HTML | P1 | S | — | TODO |
-| 002  | Verification baseline: vitest + pytest + CI | P1 | M | — (001 recommended first) | TODO |
-| 003  | Map 4WD/2WD >50″ classes into the suv4x4 profile | P1 | S | 002 (for tests) | TODO |
-| 004  | Local-date default + non-leap day-of-year alignment | P2 | S | 002 | TODO |
-| 005  | Per-class season windows in tiles + per-token evaluation | P2 | L | 002, 004 (003 recommended) | TODO |
-| 006  | Hygiene sweep: stale comments, dead code, social meta, AQI wording, snow status | P2 | S | — (after 001/004 to avoid main.ts conflicts) | TODO |
-| 007  | Repo CLAUDE.md: deploy rules, commands, couplings | P2 | S | — (best after 002/004/006 land, so facts are final) | TODO |
-| 008  | Automated data refresh: vintage stamping + scheduled PR workflow | P2 | M | 002 | TODO |
-| 009  | Amend DESIGN.md/PRODUCT.md to the light-only theme decision | P3 | S | — | TODO |
+| 001  | Trails in popups + fire intersection; escape popup HTML | P1 | S | — | DONE (PR #6) |
+| 002  | Verification baseline: vitest + pytest + CI | P1 | M | — (001 recommended first) | DONE (PR #8) |
+| 003  | Map 4WD/2WD >50″ classes into the suv4x4 profile | P1 | S | 002 (for tests) | DONE (PR #9) |
+| 004  | Local-date default + non-leap day-of-year alignment | P2 | S | 002 | DONE (PR #10) |
+| 005  | Per-class season windows in tiles + per-token evaluation | P2 | L | 002, 004 (003 recommended) | DONE (PR #13; tiles rebuilt + shipped 2026-07-02) |
+| 006  | Hygiene sweep: stale comments, dead code, social meta, AQI wording, snow status | P2 | S | — (after 001/004 to avoid main.ts conflicts) | DONE (PR #12) |
+| 007  | Repo CLAUDE.md: deploy rules, commands, couplings | P2 | S | — (best after 002/004/006 land, so facts are final) | DONE (PR #14) |
+| 008  | Automated data refresh: vintage stamping + scheduled PR workflow | P2 | M | 002 | DONE (PR #11; see proof-run finding below) |
+| 009  | Amend DESIGN.md/PRODUCT.md to the light-only theme decision | P3 | S | — | DONE (PR #7) |
+
+All nine plans executed 2026-07-01/02 by dispatched executor agents (advisor-
+reviewed diffs, CI-gated squash merges).
+
+### Proof-run finding (2026-07-02): CI fetch gets empty data from USFS
+
+The first `workflow_dispatch` of `data-refresh.yml` FAILED, and usefully so:
+the USFS EDW service returned **0 features for all 17 forests** on the GitHub
+runner (HTTP 200s with empty feature arrays — the same queries return data
+from a residential IP, so the runner/datacenter IPs are evidently filtered
+upstream). tippecanoe's "did not read any valid geometries" error (exit 110)
+failed `make data` before the PR step, so no empty-tile PR was opened — but
+that guard is accidental. **Backlog hardening**: `fetch_mvum.py` should exit
+non-zero when the statewide total is 0 (or any forest is EMPTY) so the
+workflow fails on data quality, not by luck; and the scheduled refresh likely
+needs a non-datacenter egress (self-hosted runner or local `make data`) to
+work at all. Until then, treat `data-refresh.yml` as manual-with-supervision
+and refresh locally.
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale).
