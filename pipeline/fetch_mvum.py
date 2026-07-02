@@ -94,10 +94,24 @@ def fetch_forest(client: httpx.Client, forest: str) -> list[dict]:
     return feats
 
 
+def data_quality_failures(per_forest_counts: dict[str, int]) -> list[str]:
+    """Forests whose fetch returned zero features.
+
+    The EDW service has been observed answering datacenter IPs with HTTP 200
+    and EMPTY feature arrays (2026-07-02: all 17 forests, from a GitHub
+    runner). Every forest in CA_FORESTS has MVUM routes, so an empty result
+    is always a fetch anomaly, never real data — treat it like a failure so
+    `make fetch` (and the data-refresh workflow) stops before building
+    hollow tiles.
+    """
+    return [forest for forest, n in per_forest_counts.items() if n == 0]
+
+
 def main() -> int:
     DATA_DIR.mkdir(exist_ok=True)
     statewide: list[dict] = []
     failures: list[str] = []
+    per_forest_counts: dict[str, int] = {}
 
     with httpx.Client(headers={"User-Agent": "ca-mvum/0.1 (build pipeline)"}) as client:
         for forest in CA_FORESTS:
@@ -118,14 +132,19 @@ def main() -> int:
             print(f"  ✓ {forest:<38} {len(feats):>6} features "
                   f"({roads} road / {trails} trail) {flag}")
             statewide.extend(feats)
+            per_forest_counts[forest] = len(feats)
 
     (DATA_DIR / "ca-statewide.geojson").write_text(
         json.dumps({"type": "FeatureCollection", "features": statewide})
     )
     print(f"\nStatewide total: {len(statewide)} features across "
           f"{len(CA_FORESTS) - len(failures)}/{len(CA_FORESTS)} forests.")
+    empty = data_quality_failures(per_forest_counts)
     if failures:
         print(f"Failed forests: {', '.join(failures)}", file=sys.stderr)
+    if empty:
+        print(f"Empty forests (fetch anomaly): {', '.join(empty)}", file=sys.stderr)
+    if failures or empty:
         return 1
     return 0
 
